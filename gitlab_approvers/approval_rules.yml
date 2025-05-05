@@ -1,0 +1,15 @@
+---
+approval_rules:
+  infra_approvers:
+    name: "Approvers"
+    approvals_required: 1
+    applies_to_all_protected_branches: True
+    users: []
+
+# projects:
+#   default:
+#     in_pci_scope: True
+#     approval_rules:
+#       - infra_approvers
+#       - pci_approvers
+# 
