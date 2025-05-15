@@ -1,0 +1,16 @@
+[project]
+name = "gitlab-config"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "prettytable>=3.16.0",
+    "python-dotenv>=1.1.0",
+    "python-gitlab>=5.6.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.9",
+]
