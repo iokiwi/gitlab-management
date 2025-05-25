@@ -22,11 +22,15 @@ cp .env.example .env
 
 Source a GitLab [Personal Access Token](https://docs.gitlab.com/user/profile/personal_access_tokens/) from [User Settings / Access Tokens](https://gitlab.com/-/user_settings/personal_access_tokens/)
 
- * Scope: `Owner` or `Maintainer` - requires Maintaine role in all repos managed
- * Permissions: `api`, `read_api`
+ * Scope: `Owner` or `Maintainer` - requires Maintainer role in all repos managed
+ * Permissions: `api`
 
 Run the script
 
 ```bash
-uv run python main.py
+uv run python main.py -h
+```
+
+```bash
+uv run python main.py -h
 ```

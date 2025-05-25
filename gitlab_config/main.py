@@ -12,33 +12,14 @@ from gitlab.v4.objects.projects import Project
 from typing import Dict
 from pathlib import Path
 
+import config
+
+# Note: We only currently support a single global config
+managed_fields = config.CONFIG["default"]
+
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-def read_mr_template(template_file: Path = Path("templates/merge_requests_template.txt")) -> str:
-    """Read the merge request template from a file in the current directory."""
-
-    try:
-        with open(template_file, 'r') as file:
-            template_content = file.read()
-            return template_content
-    except FileNotFoundError:
-        logger.warning(f"Template file '{template_file}' not found. No template will be set.")
-        return None
-    except Exception as e:
-        logger.error(f"Error reading template file: {e}")
-        return None
-
-# Global lmao
-managed_fields = {
-    "squash_option": "default_on",
-    "prevent_secrets": True,
-    "remove_source_branch_after_merge": True,
-    "merge_method": "merge",
-    "merge_access_levels": "Developers + Maintainers",
-    "only_allow_merge_if_pipeline_succeeds": True,
-    "merge_requests_template": read_mr_template(),
-}
 
 def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dict:
     # Fetch the project by ID to get detailed information, including the default branch
@@ -160,13 +141,6 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
                     push_rules.prevent_secrets = expected
             output_fields[field] = push_rules.prevent_secrets
 
-        # TODO: Check status of 'Enable Merged Results'
-
-        # Push Rules we might want to manage in the future
-        # TODO: Reject unverified users
-        # TODO: Reject inconsistent username
-        # TODO: Check whether the commit autor is a GitLab user
-
     if fix:
         if push_rule_changes:
             push_rules.save()
@@ -179,8 +153,7 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
         else:
             print(project.name)
             for change in push_rule_changes + project_changes:
-                print(f"\t{change}")
-
+                print(f"{change}")
 
     return output_fields
 
@@ -228,28 +201,29 @@ def manage_projects_in_group(
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--fix", action="store_true", help="Script will not make changes unless --fix is passed")
-    parser.add_argument("--limit", type=int, help="Stop after doing <n> projects. Helpful for testing")
-    parser.add_argument("-r", "--recurse-subprojects", default=False, action="store_true")
+    # TODO: Make this accept multiple values
+    parser.add_argument("--group", help="Group ID to manage")
     # TODO: Add argument to specify a project by name and / or ID
+    # parser.add_argument("--projects", , help="Project IDs to manage")
+    parser.add_argument("--limit", type=int, help="Stop after doing <n> projects. Helpful for testing")
+    parser.add_argument("-f", "--fix", action="store_true", help="Script will not make changes unless --fix is passed")
+    parser.add_argument("-r", "--recurse-subprojects", default=False, action="store_true")
     args = parser.parse_args()
 
     load_dotenv()
 
     # GitLab private token
-    GITLAB_URL = "https://gitlab.com"
-    PRIVATE_TOKEN = os.environ.get("GITLAB_TOKEN")
-    GROUP_ID = os.environ.get("GITLAB_GROUP_ID")
+    GITLAB_URL = os.environ.get("GITLAB_URL", "https://gitlab.com")
+    GITLAB_TOKEN = os.environ.get("GITLAB_TOKEN")
 
-    gl = gitlab.Gitlab(GITLAB_URL, private_token=PRIVATE_TOKEN)
+    gl = gitlab.Gitlab(GITLAB_URL, private_token=GITLAB_TOKEN)
 
     rows, count = manage_projects_in_group(
         gl,
-        GROUP_ID,
+        args.group,
         fix=args.fix,
         limit=args.limit,
-        recurse=args.recurse_subprojects,
-        count=0,
+        recurse=args.recurse_subprojects
     )
 
     table = PrettyTable()
