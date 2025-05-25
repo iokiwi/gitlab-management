@@ -202,7 +202,7 @@ def manage_projects_in_group(
 def main():
     parser = ArgumentParser()
     # TODO: Make this accept multiple values
-    parser.add_argument("--group", help="Group ID to manage")
+    parser.add_argument("--group-ids", required=True, help="Group ID to manage")
     # TODO: Add argument to specify a project by name and / or ID
     # parser.add_argument("--projects", , help="Project IDs to manage")
     parser.add_argument("--limit", type=int, help="Stop after doing <n> projects. Helpful for testing")
@@ -220,7 +220,7 @@ def main():
 
     rows, count = manage_projects_in_group(
         gl,
-        args.group,
+        args.group_ids[0],
         fix=args.fix,
         limit=args.limit,
         recurse=args.recurse_subprojects

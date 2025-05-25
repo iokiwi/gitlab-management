@@ -1,9 +1,9 @@
 import yaml
 from pathlib import Path
 
-def load_yaml_config(filename: Path == "config.yaml"):
-    with open(filename) as f:
+def load_yaml_config(filename: Path = "config.yaml"):
+    with open(filename, 'r') as f:
         config = yaml.safe_load(f)
-        return config[]
+        return config
 
 CONFIG = load_yaml_config()
