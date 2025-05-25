@@ -28,9 +28,9 @@ Source a GitLab [Personal Access Token](https://docs.gitlab.com/user/profile/per
 Run the script
 
 ```bash
-uv run python main.py -h
+uv run main.py -h
 ```
 
 ```bash
-uv run python main.py -h
+uv run main.py -h
 ```
