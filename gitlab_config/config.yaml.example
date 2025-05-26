@@ -1,0 +1,86 @@
+default:
+    #--------------------------------------------------
+    # Project Settings
+    #   API: PUT /projects/:id
+    #   API Docs:  https://docs.gitlab.com/api/projects/#edit-a-project
+    #--------------------------------------------------
+
+    # UI: Settings > Merge requests > Squash commits when merging
+    # Docs: https://docs.gitlab.com/user/project/merge_requests/squash_and_merge/
+    squash_option: default_on
+
+    # UI: Settings > Merge requests > Delete source branch option
+    # Docs: https://docs.gitlab.com/user/project/merge_requests/
+    remove_source_branch_after_merge: True
+    
+    # UI: Settings > Merge requests > Merge method
+    # Docs: https://docs.gitlab.com/user/project/merge_requests/methods/
+    merge_method: "merge"
+
+    # UI: Settings > Merge requests > Merge checks > Pipelines must succeed
+    # Docs: https://docs.gitlab.com/user/project/merge_requests/merge_when_pipeline_succeeds/
+    only_allow_merge_if_pipeline_succeeds: True
+
+    # UI: Settings > General > Default description template for merge requests
+    # Docs: https://docs.gitlab.com/user/project/description_templates/
+    merge_request_template: |
+        ### Objective
+
+        ### Changes
+
+        ### Ticket Reference
+
+        /assign_reviewer @john_smith
+
+    # UI: Settings > Security and Compliance > Secret push protection
+    # Docs: https://docs.gitlab.com/user/application_security/secret_detection/secret_push_protection/
+    # Note: Ultimate tier feature
+    prevent_secrets: True
+
+    #--------------------------------------------------
+    # Protected Branches API
+    #   API: POST/PUT /projects/:id/protected_branches
+    #   API Docs: https://docs.gitlab.com/api/protected_branches/
+    #--------------------------------------------------
+
+    # Docs: https://docs.gitlab.com/user/project/repository/branches/protected/
+    # UI: Settings > Repository > Protected branches > Allowed to merge
+    #
+    # Note: This should use integer access levels (30=Developer, 40=Maintainer) or access level objects
+    # For merge_access_levels, use Protected Branches API:
+    # allowed_to_merge:
+    #   - access_level: 30  # Developer
+    #   - access_level: 40  # Maintainer
+    merge_access_levels: "Developers + Maintainers"
+
+    # TODO: Config we might want to manage in the future
+    # * approvals_before_merge
+    # * default_branch
+    # * Enable Merged Results
+    # * Push rules
+    #   * Reject unverified users
+    #   * Reject inconsistent username
+    #   * Check whether the commit autor is a GitLab user
+
+# Suggested Precidence 
+# 1. Project Configuration
+# 2. Group Configuration
+# 3. Default Configuration
+
+# -----------------------------------
+# TODO: Per group configurations?
+# -----------------------------------
+
+# group_id_or_name:
+#   config_merge_method: [replace_default|merge_with_default]
+#   squash_option: default_on
+#   [...]
+
+# -----------------------------------
+# TODO: Per project configurations?
+# -----------------------------------
+
+# project_id_or_name:
+#   config_merge_method: [replace_default|merge_with_default]
+#   squash_option: default_on
+#   [...]

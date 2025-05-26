@@ -1,4 +1,6 @@
 .env
+config.yaml
+config.yml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

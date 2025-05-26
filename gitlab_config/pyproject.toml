@@ -8,6 +8,7 @@ dependencies = [
     "prettytable>=3.16.0",
     "python-dotenv>=1.1.0",
     "python-gitlab>=5.6.0",
+    "pyyaml>=6.0.2",
 ]
 
 [dependency-groups]
