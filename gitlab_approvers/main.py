@@ -177,7 +177,6 @@ def main():
 
     count = 0
     for group_project in group_projects:
-
         project = gl.projects.get(group_project.id)
         manage_project_approval_rules(project, rule_spec_manager)
 

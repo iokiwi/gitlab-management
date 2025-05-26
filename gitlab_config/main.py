@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 from gitlab.v4.objects.projects import Project
 
 from typing import Dict
-from pathlib import Path
 
 import config
 
@@ -38,7 +37,6 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
     }
 
     for field, expected in managed_fields.items():
-
         if field == "remove_source_branch_after_merge":
             if fix:
                 if project.remove_source_branch_after_merge is not expected:
@@ -65,7 +63,9 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
                 if project.merge_method != "ff":
                     # We only do FF if we have a singular 'main' branch
                     if project.default_branch == "main":
-                        project_changes.append(f"merge_method: {project.default_branch} -> ff")
+                        project_changes.append(
+                            f"merge_method: {project.default_branch} -> ff"
+                        )
                         project.merge_method = "ff"
             output_fields[field] = project.merge_method
 
@@ -76,7 +76,9 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
                     default_protected_branch = project.branches.get(branch.name)
 
                     for level in branch.merge_access_levels:
-                        merge_access_levels_default_branch.append(level["access_level_description"])
+                        merge_access_levels_default_branch.append(
+                            level["access_level_description"]
+                        )
 
             output_fields[field] = ",".join(merge_access_levels_default_branch)
 
@@ -84,7 +86,8 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
                 try:
                     if (
                         len(merge_access_levels_default_branch) != 1
-                        or merge_access_levels_default_branch[0] != "Developers + Maintainers"
+                        or merge_access_levels_default_branch[0]
+                        != "Developers + Maintainers"
                     ):
                         project_changes.append(
                             f"Merge rule: {project.squash_option} -> default_on"
@@ -119,7 +122,9 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
             if fix:
                 # Check if the merge request template is different from the current one
                 if project.merge_requests_template != expected:
-                    project_changes.append("merge_requests_template: updated from template file")
+                    project_changes.append(
+                        "merge_requests_template: updated from template file"
+                    )
                     project.merge_requests_template = expected
 
             # Curate the output so it doesn't break table
@@ -159,18 +164,18 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
 
 
 def manage_projects_in_group(
-    gl, group_id: str, fix=False, limit=None, count=0, recurse=False, depth=0):
-
+    gl, group_id: str, fix=False, limit=None, count=0, recurse=False, depth=0
+):
     rows = []
 
     group = gl.groups.get(group_id)
-    print("  " * depth, "📁" ,f"Getting projects for {group.name} ({group.id})")
+    print("  " * depth, "📁", f"Getting projects for {group.name} ({group.id})")
     group_projects = group.projects.list(get_all=True, archived=False)
 
     for group_project in group_projects:
         project = gl.projects.get(group_project.id)
         try:
-            rows.append(manage_project_settings(project, fix, depth=depth+1))
+            rows.append(manage_project_settings(project, fix, depth=depth + 1))
         except Exception as e:
             logging.exception(e)
 
@@ -199,15 +204,25 @@ def manage_projects_in_group(
 
     return (rows, count)
 
+
 def main():
     parser = ArgumentParser()
     # TODO: Make this accept multiple values
     parser.add_argument("--group-ids", required=True, help="Group ID to manage")
     # TODO: Add argument to specify a project by name and / or ID
     # parser.add_argument("--projects", , help="Project IDs to manage")
-    parser.add_argument("--limit", type=int, help="Stop after doing <n> projects. Helpful for testing")
-    parser.add_argument("-f", "--fix", action="store_true", help="Script will not make changes unless --fix is passed")
-    parser.add_argument("-r", "--recurse-subprojects", default=False, action="store_true")
+    parser.add_argument(
+        "--limit", type=int, help="Stop after doing <n> projects. Helpful for testing"
+    )
+    parser.add_argument(
+        "-f",
+        "--fix",
+        action="store_true",
+        help="Script will not make changes unless --fix is passed",
+    )
+    parser.add_argument(
+        "-r", "--recurse-subprojects", default=False, action="store_true"
+    )
     args = parser.parse_args()
 
     load_dotenv()
@@ -223,7 +238,7 @@ def main():
         args.group_ids[0],
         fix=args.fix,
         limit=args.limit,
-        recurse=args.recurse_subprojects
+        recurse=args.recurse_subprojects,
     )
 
     table = PrettyTable()
