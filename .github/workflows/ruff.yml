@@ -1,0 +1,42 @@
+name: Ruff
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [gitlab_config, gitlab_approvers, gitflood]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: |
+        cd ${{ matrix.project }}
+        uv sync --dev
+    
+    - name: Run ruff check
+      run: |
+        cd ${{ matrix.project }}
+        uv run ruff check .
+    
+    - name: Run ruff format check
+      run: |
+        cd ${{ matrix.project }}
+        uv run ruff format --check .

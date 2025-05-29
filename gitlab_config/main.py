@@ -7,15 +7,14 @@ import gitlab
 from prettytable import PrettyTable
 from dotenv import load_dotenv
 
-from groups import manage_group, manage_groups
-from projects import manage_project_settings, manage_projects
+from groups import manage_groups
+from projects import manage_projects
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
 def get_args() -> argparse.Namespace:
-
     parser = argparse.ArgumentParser()
 
     group = parser.add_mutually_exclusive_group(required=True)
@@ -26,9 +25,7 @@ def get_args() -> argparse.Namespace:
         "--limit", type=int, help="Stop after doing <n> projects. Helpful for testing"
     )
 
-    parser.add_argument(
-        "-r", "--recurse-subprojects", default=False, action="store_true"
-    )
+    parser.add_argument("-r", "--recursive", default=False, action="store_true")
     parser.add_argument(
         "-f",
         "--fix",
@@ -36,12 +33,10 @@ def get_args() -> argparse.Namespace:
         help="Script will not make changes unless this flag is passed. E.g. Script is no-op by default.",
     )
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def main() -> None:
-
     args = get_args()
     load_dotenv()
 
@@ -60,7 +55,7 @@ def main() -> None:
             list(args.groups),
             fix=args.fix,
             limit=args.limit,
-            recurse=args.recurse_subprojects,
+            recurse=args.recursive,
         )
 
     table = PrettyTable()
