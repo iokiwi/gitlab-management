@@ -163,17 +163,11 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
     return output_fields
 
 
-def manage_projects_in_group(
-    gl, group_id: str, fix=False, limit=None, count=0, recurse=False, depth=0
-):
+def manage_projects(gl: gitlab.Gitlab, project_ids: list[str], **kwargs):
+
     rows = []
-
-    group = gl.groups.get(group_id)
-    print("  " * depth, "📁", f"Getting projects for {group.name} ({group.id})")
-    group_projects = group.projects.list(get_all=True, archived=False)
-
-    for group_project in group_projects:
-        project = gl.projects.get(group_project.id)
+    for project_id in project_ids:
+        project = gl.projects.get(project_id)
         try:
             rows.append(manage_project_settings(project, fix, depth=depth + 1))
         except Exception as e:
@@ -184,13 +178,36 @@ def manage_projects_in_group(
             print(f"Limit of {limit} reached. Exiting")
             break
 
+    return (rows, count)
+
+
+def manage_group(
+    gl: gitlab.Gitlab,
+    group_id: str,
+    limit: int = None,
+    fix: bool = False,
+    recurse: bool = False,
+    count: int = 0,
+    depth: int = 0,
+):
+    rows = []
+
+    group = gl.groups.get(group_id)
+    print("  " * depth, "📁", f"Getting projects for {group.name} ({group.id})")
+    group_projects = group.projects.list(get_all=True, archived=False)
+    project_ids = [group_project.id for group_project in group_projects]
+
+    rows, count = manage_projects(
+        gl, project_ids, fix=fix, limit=limit, count=count, recurse=recurse, depth=depth
+    )
+
     if recurse:
         subgroups = group.subgroups.list(all=True, archived=False)
         for subgroup in subgroups:
             if limit is not None and count >= limit:
                 break
 
-            subrows, count = manage_projects_in_group(
+            subrows, count = manage_group(
                 gl,
                 subgroup.id,
                 fix=fix,
@@ -205,12 +222,28 @@ def manage_projects_in_group(
     return (rows, count)
 
 
+def manage_groups(
+    gl: gitlab.Gitlab,
+    groups_ids: list[str],
+    count: int = 0,
+    limit: int = None,
+    recurse: bool = False,
+):
+    rows = []
+    for group_id in groups_ids:
+        rows, count = manage_group(gl, group_id, count=count)
+        if count >= limit:
+            break
+    return (rows, count)
+
+
 def main():
     parser = ArgumentParser()
     # TODO: Make this accept multiple values
-    parser.add_argument("--group-ids", required=True, help="Group ID to manage")
-    # TODO: Add argument to specify a project by name and / or ID
-    # parser.add_argument("--projects", , help="Project IDs to manage")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--groups", nargs="+", help="Groups to manage")
+    group.add_argument("--projects", nargs="+", help="Projects to manage")
+
     parser.add_argument(
         "--limit", type=int, help="Stop after doing <n> projects. Helpful for testing"
     )
@@ -226,20 +259,23 @@ def main():
     args = parser.parse_args()
 
     load_dotenv()
-
-    # GitLab private token
     GITLAB_URL = os.environ.get("GITLAB_URL", "https://gitlab.com")
     GITLAB_TOKEN = os.environ.get("GITLAB_TOKEN")
-
     gl = gitlab.Gitlab(GITLAB_URL, private_token=GITLAB_TOKEN)
 
-    rows, count = manage_projects_in_group(
-        gl,
-        args.group_ids[0],
-        fix=args.fix,
-        limit=args.limit,
-        recurse=args.recurse_subprojects,
-    )
+    if args.projects:
+        rows, count = manage_projects(
+            gl, list(args.projects), fix=args.fix, limit=args.limit
+        )
+
+    if args.groups:
+        rows, count = manage_groups(
+            gl,
+            list(args.groups),
+            fix=args.fix,
+            limit=args.limit,
+            recurse=args.recurse_subprojects,
+        )
 
     table = PrettyTable()
     table.align = "l"
@@ -253,3 +289,21 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# def manage_group(gl: gitlab.Gitlab, group_id: str, fix=False, limit=None, count=0, recurse=False, depth=0):
+#     rows = []
+
+#     group = gl.groups.get(group_id)
+#     print("  " * depth, "📁", f"Getting projects for {group.name} ({group.id})")
+#     group_projects = group.projects.list(get_all=True, archived=False)
+
+#     manage_projects(
+#         gl,
+#         group_projects,
+#         fix=fix,
+#         limit=limit,
+#         count=count,
+#         recurse=recurse,
+#         depth=depth,
+#     )
