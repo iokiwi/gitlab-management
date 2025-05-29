@@ -21,10 +21,16 @@ uv sync
 cp .env.example .env
 ```
 
-Source a GitLab [Personal Access Token](https://docs.gitlab.com/user/profile/personal_access_tokens/) from [User Settings / Access Tokens](https://gitlab.com/-/user_settings/personal_access_tokens/)
+Source a GitLab [Personal Access Token](https://docs.gitlab.com/user/profile/personal_access_tokens/) from [User Settings / Access Tokens](https://gitlab.com/-/user_settings/personal_access_tokens/) and put it in `.env`
 
  * Scope: `Owner` or `Maintainer` - requires Maintaine role in all repos managed
  * Permissions: `api`, `read_api`
+
+Create approval rules config
+
+```bash
+cp approval_rules.yml.example approval_rules.yml
+```
 
 Run the script
 

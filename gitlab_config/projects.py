@@ -163,7 +163,6 @@ def manage_projects(
     count: int = 0,
     depth: int = 0,
 ) -> Tuple[List[Dict], int]:
-
     rows = []
     for project_id in project_ids:
         project = gl.projects.get(project_id)
