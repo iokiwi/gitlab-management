@@ -3,6 +3,7 @@ import logging
 
 import gitlab
 from prettytable import PrettyTable
+from rich.console import Console
 
 from gitlab_config import config
 from gitlab_config.groups import get_projects_for_groups
@@ -24,9 +25,13 @@ def get_args() -> argparse.Namespace:
         "groups",
         help="Manage projects level settings across one or more groups and, optionally, their sub-groups",
     )
-    groups_parser.add_argument("groups", nargs="+", help="Group ids or names")
     groups_parser.add_argument(
-        "--limit", type=int, help="Stop after doing <n> projects. Helpful for testing"
+        "group_names_or_ids",
+        nargs="+",
+        help="One or more group names or ids for which to manage or report the configuration.",
+    )
+    groups_parser.add_argument(
+        "--limit", type=int, help="Stop after doing <n> projects. Helpful for testing."
     )
     groups_parser.add_argument(
         "-r",
@@ -43,8 +48,15 @@ def get_args() -> argparse.Namespace:
     )
 
     # Projects subcommand
-    projects_parser = subparsers.add_parser("projects", help="Manage projects")
-    projects_parser.add_argument("projects", nargs="+", help="Projects ids")
+    projects_parser = subparsers.add_parser(
+        "projects",
+        help="Manage project level settings for one or more projects by project id",
+    )
+    projects_parser.add_argument(
+        "project_ids",
+        nargs="+",
+        help="Projects id of one or more projects for which to manage or report the configuration.",
+    )
     projects_parser.add_argument(
         "-f",
         "--fix",
@@ -57,21 +69,27 @@ def get_args() -> argparse.Namespace:
 
 def main() -> None:
     args = get_args()
+    console = Console()
+
+    if not args.fix:
+        console.print(
+            "No changes will be made unless the --fix flag is specified", style="yellow"
+        )
 
     gl = gitlab.Gitlab(config.CONFIG["GITLAB_URL"], private_token=config.GITLAB_TOKEN)
 
     if args.command == "projects":
-        project_ids = args.projects
+        project_ids = args.project_id
     elif args.command == "groups":
         projects = get_projects_for_groups(
             gl,
-            list(args.groups),
+            list(args.group_name_or_id),
             limit=args.limit,
             recurse=args.recursive,
         )
         project_ids = [project.id for project in projects]
 
-    rows = manage_projects(gl, project_ids, config, fix=args.fix)
+    rows, change_count = manage_projects(gl, project_ids, config, fix=args.fix)
 
     table = PrettyTable()
     table.align = "l"
@@ -80,7 +98,9 @@ def main() -> None:
     for row in rows:
         table.add_row(row.values())
 
+    console.print(f"Changed {change_count}/{len(project_ids)} projects", style="green")
     print(table)
+    console.print(f"Changed {change_count}/{len(project_ids)} projects", style="green")
 
 
 if __name__ == "__main__":

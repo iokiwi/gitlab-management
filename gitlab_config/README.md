@@ -38,22 +38,10 @@ Note the script operates in a no-op mode by default and will not update anything
 $ uv run gitlab-config projects PROJECT_ID_1 [PROJECT_ID_2...]
 
 # Run the script recursively. E.g. on your top level groups and for all subgroups
-$ uv run gitlab-config groups --recursive --limit 10 [GROUP_NAME_OR_ID_1] [GROUP_NAME_OR_ID_1]
+$ uv run gitlab-config groups --recursive --limit 10 [GROUP_NAME_OR_ID_1] [GROUP_NAME_OR_ID_2]
 
 # Help and usage
 $ uv run gitlab-config -h
-```
-
-```
-usage: gitlab-config [-h] {groups,projects} ...
-
-positional arguments:
-  {groups,projects}
-    groups           Manage projects level settings across one or moregroups
-    projects         Manage projects
-
-options:
-  -h, --help         show this help message and exit
 ```
 
 Install globally

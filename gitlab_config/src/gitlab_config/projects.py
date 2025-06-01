@@ -6,10 +6,19 @@ from gitlab.v4.objects.projects import Project
 
 logger = logging.getLogger(__name__)
 
+# TODO: For each field, report if it changed or should change
+# Display it as yellow or red if it will change. Display it as blue or geen if it did change.
+# Create styled text without printing
+# styled_text = Text("No changes will be made unless the --fix flag is passed", style="yellow")
+# console.print(styled_text)
+# styled_string = console.render_str(Text("Hello", style="yellow"))
+# print(styled_string)
+
 
 def manage_project_settings(project: Project, config: Dict, fix: bool = False) -> Dict:
     # Fetch the project by ID to get detailed information, including the default branch
 
+    changed = False
     managed_fields = config.CONFIG.get(project.name, config.CONFIG["default"])
 
     project_changes = []
@@ -137,9 +146,11 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
 
     if fix:
         if push_rule_changes:
+            changed = True
             push_rules.save()
 
         if project_changes:
+            changed = True
             project.save()
 
         if not project_changes and not push_rule_changes:
@@ -149,7 +160,7 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
             for change in push_rule_changes + project_changes:
                 print(f"{change}")
 
-    return output_fields
+    return (output_fields, changed)
 
 
 def manage_projects(
@@ -159,14 +170,18 @@ def manage_projects(
     fix: bool = False,
 ) -> Dict:
     rows = []
+    change_count = 0
     for i, project_id in enumerate(project_ids):
         project = gl.projects.get(project_id)
         print(
             f"Managing project ({i + 1}/{len(project_ids)}): [{project.id}] {project.path}"
         )
         try:
-            rows.append(manage_project_settings(project, config, fix=fix))
+            row, changed = manage_project_settings(project, config, fix=fix)
+            rows.append(row)
+            if changed:
+                change_count += 1
         except Exception as e:
             logging.exception(e)
 
-    return rows
+    return (rows, change_count)
