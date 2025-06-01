@@ -1,18 +1,20 @@
+import argparse
 import logging
 import os
-import argparse
 
 import gitlab
-
-from prettytable import PrettyTable
 from dotenv import load_dotenv
+from prettytable import PrettyTable
 
 from gitlab_config import config
 from gitlab_config.groups import get_projects_for_groups
 from gitlab_config.projects import manage_projects
 
+log_level = getattr(logging, os.environ.get("LOG_LEVEL", "WARNING").upper())
+logging.basicConfig(
+    level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -66,7 +68,6 @@ def main() -> None:
         )
         project_ids = [project.id for project in projects]
 
-    print(project_ids)
     rows = manage_projects(gl, project_ids, config, fix=args.fix)
 
     table = PrettyTable()

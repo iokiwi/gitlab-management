@@ -1,8 +1,10 @@
+import logging
 from typing import List
 
 import gitlab
-
 from gitlab.v4.objects.projects import GroupProject
+
+logger = logging.getLogger(__name__)
 
 
 def get_projects_for_group(
@@ -11,9 +13,7 @@ def get_projects_for_group(
     limit: int = None,
     recurse: bool = False,
 ) -> List[GroupProject]:
-
     group = gl.groups.get(group_id, simple=True)
-    group_projects = []
 
     page = 1
     per_page = 20
@@ -21,7 +21,13 @@ def get_projects_for_group(
     if limit and limit < per_page:
         per_page = limit
 
+    group_projects = []
     while True:
+        logger.info(f"Getting projects for group: [{group.id}] {group.full_path}")
+        logger.debug(
+            f"page: {page}, per_page: {per_page}, limit: {limit}, include_subgroups: {recurse}"
+        )
+
         projects_page = group.projects.list(
             page=page,
             per_page=20,
@@ -51,7 +57,6 @@ def get_projects_for_groups(
     limit: int = None,
     recurse: bool = False,
 ) -> List[GroupProject]:
-
     unique_projects = dict()
     for group_id in groups_ids:
         group_projects = get_projects_for_group(
