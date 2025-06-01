@@ -159,9 +159,11 @@ def manage_projects(
     fix: bool = False,
 ) -> Dict:
     rows = []
-    for project_id in project_ids:
+    for i, project_id in enumerate(project_ids):
         project = gl.projects.get(project_id)
-        logger.info(f"Managing project: [{project.id}] {project.path}")
+        print(
+            f"Managing project ({i + 1}/{len(project_ids)}): [{project.id}] {project.path}"
+        )
         try:
             rows.append(manage_project_settings(project, config, fix=fix))
         except Exception as e:

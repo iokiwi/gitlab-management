@@ -1,43 +1,51 @@
 import argparse
 import logging
-import os
 
 import gitlab
-from dotenv import load_dotenv
 from prettytable import PrettyTable
 
 from gitlab_config import config
 from gitlab_config.groups import get_projects_for_groups
 from gitlab_config.projects import manage_projects
 
-log_level = getattr(logging, os.environ.get("LOG_LEVEL", "WARNING").upper())
+log_level = getattr(logging, config.CONFIG["GITLAB_CONFIG_LOG_LEVEL"], logging.WARNING)
 logging.basicConfig(
     level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-
 logger = logging.getLogger(__name__)
 
 
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="command", required=True)
 
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--groups", nargs="+", help="Groups to manage")
-    group.add_argument("--projects", nargs="+", help="Projects to manage")
-
-    parser.add_argument(
+    # Groups subcommand
+    groups_parser = subparsers.add_parser(
+        "groups",
+        help="Manage projects level settings across one or more groups and, optionally, their sub-groups",
+    )
+    groups_parser.add_argument("groups", nargs="+", help="Group ids or names")
+    groups_parser.add_argument(
         "--limit", type=int, help="Stop after doing <n> projects. Helpful for testing"
     )
-
-    parser.add_argument(
+    groups_parser.add_argument(
         "-r",
         "--recursive",
         default=False,
         action="store_true",
-        help="Recursively get projects from subgroups",
+        help="Recursively search sub-groups of specified group(s)",
+    )
+    groups_parser.add_argument(
+        "-f",
+        "--fix",
+        action="store_true",
+        help="Script will not make changes unless this flag is passed. E.g. Script is no-op by default.",
     )
 
-    parser.add_argument(
+    # Projects subcommand
+    projects_parser = subparsers.add_parser("projects", help="Manage projects")
+    projects_parser.add_argument("projects", nargs="+", help="Projects ids")
+    projects_parser.add_argument(
         "-f",
         "--fix",
         action="store_true",
@@ -49,17 +57,12 @@ def get_args() -> argparse.Namespace:
 
 def main() -> None:
     args = get_args()
-    load_dotenv()
 
-    GITLAB_URL = os.environ.get("GITLAB_URL", "https://gitlab.com")
-    GITLAB_TOKEN = os.environ.get("GITLAB_TOKEN")
+    gl = gitlab.Gitlab(config.CONFIG["GITLAB_URL"], private_token=config.GITLAB_TOKEN)
 
-    gl = gitlab.Gitlab(GITLAB_URL, private_token=GITLAB_TOKEN)
-
-    if args.projects:
+    if args.command == "projects":
         project_ids = args.projects
-
-    if args.groups:
+    elif args.command == "groups":
         projects = get_projects_for_groups(
             gl,
             list(args.groups),
