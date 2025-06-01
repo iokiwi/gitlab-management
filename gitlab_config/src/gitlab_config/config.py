@@ -13,7 +13,9 @@ def load_yaml_config(filename: Path = "config.yaml"):
             config = yaml.safe_load(f)
             return config
     except FileNotFoundError:
-        raise FileNotFoundError(f"Config file '{filename}' not found. Please ensure '{filename}' exists.")
+        raise FileNotFoundError(
+            f"Config file '{filename}' not found. Please ensure '{filename}' exists."
+        )
     except yaml.YAMLError as e:
         raise yaml.YAMLError(f"Failed to parse '{filename}' as YAML: {str(e)}")
     except Exception as e:
