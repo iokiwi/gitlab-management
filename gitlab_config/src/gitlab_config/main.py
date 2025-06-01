@@ -79,11 +79,11 @@ def main() -> None:
     gl = gitlab.Gitlab(config.CONFIG["GITLAB_URL"], private_token=config.GITLAB_TOKEN)
 
     if args.command == "projects":
-        project_ids = args.project_id
+        project_ids = args.project_ids
     elif args.command == "groups":
         projects = get_projects_for_groups(
             gl,
-            list(args.group_name_or_id),
+            list(args.group_names_or_ids),
             limit=args.limit,
             recurse=args.recursive,
         )

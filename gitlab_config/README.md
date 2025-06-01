@@ -1,8 +1,6 @@
 # GitLab Config
 
-Script for managing consistent config across all GitLab projects in a Group
-
-Requires [uv](https://docs.astral.sh/uv/getting-started/installation/)
+Script for managing consistent config across all GitLab projects in a Group. Requires [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ## Quickstart
 
@@ -10,24 +8,19 @@ Requires [uv](https://docs.astral.sh/uv/getting-started/installation/)
 cd gitlab_config
 ```
 
-
-### Install dependendencies
+Create a config file and modify to requirements
+```bash
+cp config.yaml.example config.yaml
+```
 
 ```bash
 cp .env.example .env
 ```
 
-Source a GitLab [Personal Access Token](https://docs.gitlab.com/user/profile/personal_access_tokens/) from [User Settings / Access Tokens](https://gitlab.com/-/user_settings/personal_access_tokens/) and put it into `.env` (**NOT** `.env.example`!)
+Create a GitLab [Personal Access Token](https://docs.gitlab.com/user/profile/personal_access_tokens/) from [User Settings / Access Tokens](https://gitlab.com/-/user_settings/personal_access_tokens/) and put it into `.env` (**NOT** `.env.example`!)
 
  * Scope: `Owner` or `Maintainer` - requires at least maintainer role in all repos managed
  * Permissions: `api`
-
-### Create a config file
-And modify to taste
-
-```bash
-cp config.yaml.example config.yaml
-```
 
 ### Run the script
 
@@ -44,7 +37,7 @@ $ uv run gitlab-config groups --recursive --limit 10 [GROUP_NAME_OR_ID_1] [GROUP
 $ uv run gitlab-config -h
 ```
 
-Install globally
+# Install globally
 ```bash
 uv tool install -e .
 ```
