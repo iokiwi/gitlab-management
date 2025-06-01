@@ -7,8 +7,10 @@ import gitlab
 from prettytable import PrettyTable
 from dotenv import load_dotenv
 
-from groups import manage_groups
-from projects import manage_projects
+from gitlab_config import config
+from gitlab_config.groups import get_projects_for_groups
+from gitlab_config.projects import manage_projects
+
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -25,7 +27,14 @@ def get_args() -> argparse.Namespace:
         "--limit", type=int, help="Stop after doing <n> projects. Helpful for testing"
     )
 
-    parser.add_argument("-r", "--recursive", default=False, action="store_true")
+    parser.add_argument(
+        "-r",
+        "--recursive",
+        default=False,
+        action="store_true",
+        help="Recursively get projects from subgroups",
+    )
+
     parser.add_argument(
         "-f",
         "--fix",
@@ -42,21 +51,23 @@ def main() -> None:
 
     GITLAB_URL = os.environ.get("GITLAB_URL", "https://gitlab.com")
     GITLAB_TOKEN = os.environ.get("GITLAB_TOKEN")
+
     gl = gitlab.Gitlab(GITLAB_URL, private_token=GITLAB_TOKEN)
 
     if args.projects:
-        rows, count = manage_projects(
-            gl, list(args.projects), fix=args.fix, limit=args.limit
-        )
+        project_ids = args.projects
 
     if args.groups:
-        rows, count = manage_groups(
+        projects = get_projects_for_groups(
             gl,
             list(args.groups),
-            fix=args.fix,
             limit=args.limit,
             recurse=args.recursive,
         )
+        project_ids = [project.id for project in projects]
+
+    print(project_ids)
+    rows = manage_projects(gl, project_ids, config, fix=args.fix)
 
     table = PrettyTable()
     table.align = "l"

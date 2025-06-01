@@ -15,3 +15,16 @@ dependencies = [
 dev = [
     "ruff>=0.11.9",
 ]
+
+[project.scripts]
+gitlab-config = "gitlab_config.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+gitlab-config = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gitlab_config"]

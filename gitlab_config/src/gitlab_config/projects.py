@@ -1,20 +1,16 @@
-from gitlab.v4.objects.projects import Project
-from typing import Dict, List, Tuple
-import gitlab
 import logging
+from typing import Dict, List
 
-import gitlab.const
-
-import config
-
-# Note: We only currently support a single global config
-managed_fields = config.CONFIG["default"]
+import gitlab
+from gitlab.v4.objects.projects import Project
 
 
-# This function is used to manage the settings of a single project
-def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dict:
+def manage_project_settings(project: Project, config: Dict, fix: bool = False) -> Dict:
     # Fetch the project by ID to get detailed information, including the default branch
-    print("   " * depth, f"Checking {project.name}... ")
+
+    managed_fields = config.CONFIG.get(
+        project.name,
+        config.CONFIG["default"])
 
     project_changes = []
     push_rule_changes = []
@@ -29,6 +25,7 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
     }
 
     for field, expected in managed_fields.items():
+
         if field == "remove_source_branch_after_merge":
             if fix:
                 if project.remove_source_branch_after_merge is not expected:
@@ -63,6 +60,7 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
 
         if field == "merge_access_levels":
             merge_access_levels_default_branch = []
+
             for branch in protected_branches:
                 if branch.name == project.default_branch:
                     default_protected_branch = project.branches.get(branch.name)
@@ -158,22 +156,17 @@ def manage_project_settings(project: Project, fix: bool = False, depth=0) -> Dic
 def manage_projects(
     gl: gitlab.Gitlab,
     project_ids: List[str],
+    config: Dict,
     fix: bool = False,
-    limit: int = None,
-    count: int = 0,
-    depth: int = 0,
-) -> Tuple[List[Dict], int]:
+) -> Dict:
+
     rows = []
     for project_id in project_ids:
+        print(project_id)
         project = gl.projects.get(project_id)
         try:
-            rows.append(manage_project_settings(project, fix, depth=depth + 1))
+            rows.append(manage_project_settings(project, config, fix=fix))
         except Exception as e:
             logging.exception(e)
 
-        count += 1
-        if limit is not None and count == limit:
-            print(f"Limit of {limit} reached. Exiting")
-            break
-
-    return (rows, count)
+    return rows
