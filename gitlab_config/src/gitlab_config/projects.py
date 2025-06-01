@@ -4,13 +4,13 @@ from typing import Dict, List
 import gitlab
 from gitlab.v4.objects.projects import Project
 
+logger = logging.getLogger(__name__)
+
 
 def manage_project_settings(project: Project, config: Dict, fix: bool = False) -> Dict:
     # Fetch the project by ID to get detailed information, including the default branch
 
-    managed_fields = config.CONFIG.get(
-        project.name,
-        config.CONFIG["default"])
+    managed_fields = config.CONFIG.get(project.name, config.CONFIG["default"])
 
     project_changes = []
     push_rule_changes = []
@@ -25,7 +25,6 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
     }
 
     for field, expected in managed_fields.items():
-
         if field == "remove_source_branch_after_merge":
             if fix:
                 if project.remove_source_branch_after_merge is not expected:
@@ -159,11 +158,10 @@ def manage_projects(
     config: Dict,
     fix: bool = False,
 ) -> Dict:
-
     rows = []
     for project_id in project_ids:
-        print(project_id)
         project = gl.projects.get(project_id)
+        logger.info(f"Managing project: [{project.id}] {project.path}")
         try:
             rows.append(manage_project_settings(project, config, fix=fix))
         except Exception as e:

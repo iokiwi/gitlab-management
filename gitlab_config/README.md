@@ -69,4 +69,28 @@ Note the script operates in a no-op mode by default and will not update anything
 
 The `--limit <n>` option stops the script after checking `<n>` projects which is usefull for testing on a limited scale.
 
-Would love some unit tests.
+<!-- ## Testing
+
+To run all tests:
+```bash
+uv run pytest
+```
+
+To run tests with verbose output:
+```bash
+uv run pytest -v
+```
+
+To run tests with coverage:
+```bash
+uv run pytest --cov=gitlab_config
+```
+
+To run a specific test file:
+```bash
+uv run pytest tests/test_config.py
+```
+
+### Test Structure
+
+Tests are organized in the `tests/` directory with the following structure: -->
