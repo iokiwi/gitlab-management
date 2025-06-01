@@ -15,20 +15,12 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
-      
-      # - name: Set up Python
-      #   uses: actions/setup-python@v5
-      #   with:
-      #     python-version: '3.13'
 
       - name: Run ruff check
         uses: astral-sh/ruff-action@v3
         with:
           args: check --diff ${{ matrix.project }}
-        # run: |
-        #   cd ${{ matrix.project }}
-        #   uv run ruff check --diff .
-      
+
       - name: Run ruff format check
         uses: astral-sh/ruff-action@v3
         with:
