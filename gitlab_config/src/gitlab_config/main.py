@@ -1,43 +1,63 @@
 import argparse
 import logging
-import os
 
 import gitlab
-from dotenv import load_dotenv
 from prettytable import PrettyTable
+from rich.console import Console
 
 from gitlab_config import config
 from gitlab_config.groups import get_projects_for_groups
 from gitlab_config.projects import manage_projects
 
-log_level = getattr(logging, os.environ.get("LOG_LEVEL", "WARNING").upper())
+log_level = getattr(logging, config.CONFIG["GITLAB_CONFIG_LOG_LEVEL"], logging.WARNING)
 logging.basicConfig(
     level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-
 logger = logging.getLogger(__name__)
 
 
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="command", required=True)
 
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--groups", nargs="+", help="Groups to manage")
-    group.add_argument("--projects", nargs="+", help="Projects to manage")
-
-    parser.add_argument(
-        "--limit", type=int, help="Stop after doing <n> projects. Helpful for testing"
+    # Groups subcommand
+    groups_parser = subparsers.add_parser(
+        "groups",
+        help="Manage projects level settings across one or more groups and, optionally, their sub-groups",
     )
-
-    parser.add_argument(
+    groups_parser.add_argument(
+        "group_names_or_ids",
+        nargs="+",
+        help="One or more group names or ids for which to manage or report the configuration.",
+    )
+    groups_parser.add_argument(
+        "--limit", type=int, help="Stop after doing <n> projects. Helpful for testing."
+    )
+    groups_parser.add_argument(
         "-r",
         "--recursive",
         default=False,
         action="store_true",
-        help="Recursively get projects from subgroups",
+        help="Recursively search sub-groups of specified group(s)",
+    )
+    groups_parser.add_argument(
+        "-f",
+        "--fix",
+        action="store_true",
+        help="Script will not make changes unless this flag is passed. E.g. Script is no-op by default.",
     )
 
-    parser.add_argument(
+    # Projects subcommand
+    projects_parser = subparsers.add_parser(
+        "projects",
+        help="Manage project level settings for one or more projects by project id",
+    )
+    projects_parser.add_argument(
+        "project_ids",
+        nargs="+",
+        help="Projects id of one or more projects for which to manage or report the configuration.",
+    )
+    projects_parser.add_argument(
         "-f",
         "--fix",
         action="store_true",
@@ -49,26 +69,27 @@ def get_args() -> argparse.Namespace:
 
 def main() -> None:
     args = get_args()
-    load_dotenv()
+    console = Console()
 
-    GITLAB_URL = os.environ.get("GITLAB_URL", "https://gitlab.com")
-    GITLAB_TOKEN = os.environ.get("GITLAB_TOKEN")
+    if not args.fix:
+        console.print(
+            "No changes will be made unless the --fix flag is specified", style="yellow"
+        )
 
-    gl = gitlab.Gitlab(GITLAB_URL, private_token=GITLAB_TOKEN)
+    gl = gitlab.Gitlab(config.CONFIG["GITLAB_URL"], private_token=config.GITLAB_TOKEN)
 
-    if args.projects:
-        project_ids = args.projects
-
-    if args.groups:
+    if args.command == "projects":
+        project_ids = args.project_id
+    elif args.command == "groups":
         projects = get_projects_for_groups(
             gl,
-            list(args.groups),
+            list(args.group_name_or_id),
             limit=args.limit,
             recurse=args.recursive,
         )
         project_ids = [project.id for project in projects]
 
-    rows = manage_projects(gl, project_ids, config, fix=args.fix)
+    rows, change_count = manage_projects(gl, project_ids, config, fix=args.fix)
 
     table = PrettyTable()
     table.align = "l"
@@ -77,7 +98,9 @@ def main() -> None:
     for row in rows:
         table.add_row(row.values())
 
+    console.print(f"Changed {change_count}/{len(project_ids)} projects", style="green")
     print(table)
+    console.print(f"Changed {change_count}/{len(project_ids)} projects", style="green")
 
 
 if __name__ == "__main__":

@@ -1,3 +1,7 @@
+GITLAB_CONFIG_LOG_LEVEL: "WARNING"
+GITLAB_URL: "https://gitlab.com"
+# GITLAB_TOKEN Needs to go in your environment variable. Never store it in plain text long term.
+
 default:
     #--------------------------------------------------
     # Project Settings

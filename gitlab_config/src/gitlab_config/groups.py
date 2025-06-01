@@ -23,7 +23,9 @@ def get_projects_for_group(
 
     group_projects = []
     while True:
-        logger.info(f"Getting projects for group: [{group.id}] {group.full_path}")
+        logger.info(
+            f"Getting projects for group: [{group.id}] {group.full_path}, include_subgroups: {recurse}"
+        )
         logger.debug(
             f"page: {page}, per_page: {per_page}, limit: {limit}, include_subgroups: {recurse}"
         )
