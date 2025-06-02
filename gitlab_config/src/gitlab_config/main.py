@@ -19,9 +19,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# def main(args: List[str] | None = None, config: Dict | None = None) -> None:
-def main(args: List[str] | None = None, config: Dict | None = None) -> None:
 
+def main(args: List[str] | None = None, config: Dict | None = None) -> None:
     if args is None:
         args = sys.argv[1:]
 
@@ -68,6 +67,3 @@ def main(args: List[str] | None = None, config: Dict | None = None) -> None:
 
 def app() -> None:
     return main(sys.argv[1:], get_config())
-
-# if __name__ == "__main__":
-#     main(sys.argv[1:], get_config())
