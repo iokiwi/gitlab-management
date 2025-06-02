@@ -18,7 +18,7 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
     # Fetch the project by ID to get detailed information, including the default branch
 
     changed = False
-    managed_fields = config.CONFIG.get(project.name, config.CONFIG["default"])
+    managed_fields = config.get(project.name, config["default"])
 
     project_changes = []
     push_rule_changes = []
