@@ -19,8 +19,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# def main(args: List[str] | None = None, config: Dict | None = None) -> None:
+def main(args: List[str] | None = None, config: Dict | None = None) -> None:
 
-def main(args: List[str], config: Dict | None = None) -> None:
+    if args is None:
+        args = sys.argv[1:]
+
     args = parse_args(args)
     console = Console()
 
@@ -62,5 +66,8 @@ def main(args: List[str], config: Dict | None = None) -> None:
     console.print(f"Changed {change_count}/{len(project_ids)} projects", style="green")
 
 
-if __name__ == "__main__":
-    main(sys.argv[1:], get_config())
+def app() -> None:
+    return main(sys.argv[1:], get_config())
+
+# if __name__ == "__main__":
+#     main(sys.argv[1:], get_config())
