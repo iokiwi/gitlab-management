@@ -4,7 +4,7 @@ from typing import Dict, List
 import gitlab
 from gitlab.v4.objects.projects import Project
 
-from rich.console import Console, Text
+from rich.console import Console
 from gitlab_config.colors import Colors, color_cell, colorize
 
 console = Console()
@@ -12,8 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 # WIP, there must be a way to generalize the management of rpoject fields
-def manage_project_setting(project: Project, setting: str, expected: str, fix: bool) -> Dict:
-
+def manage_project_setting(
+    project: Project, setting: str, expected: str, fix: bool
+) -> Dict:
     # print(getattr(project, setting), expected, fix)
     changed = False
     if getattr(project, setting) != expected:
@@ -64,7 +65,9 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
                     project.remove_source_branch_after_merge = expected
 
             output_fields[field] = {
-                "value": color_cell(project.remove_source_branch_after_merge, changed, fix),
+                "value": color_cell(
+                    project.remove_source_branch_after_merge, changed, fix
+                ),
                 "changed": changed,
             }
 
@@ -77,7 +80,9 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
                 if fix:
                     project.only_allow_merge_if_pipeline_succeeds = expected
             output_fields[field] = {
-                "value": color_cell(project.only_allow_merge_if_pipeline_succeeds, changed, fix),
+                "value": color_cell(
+                    project.only_allow_merge_if_pipeline_succeeds, changed, fix
+                ),
                 "changed": changed,
             }
 
@@ -86,9 +91,7 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
         if field == "merge_method":
             if project.merge_method != "ff" and project.default_branch == "main":
                 changed = True
-                project_changes.append(
-                    f"merge_method: {project.default_branch} -> ff"
-                )
+                project_changes.append(f"merge_method: {project.default_branch} -> ff")
                 if fix:
                     project.merge_method = "ff"
 
@@ -111,7 +114,12 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
                         )
 
             if default_protected_branch is None:
-                print(colorize(f"WARNING: The default branch for '{project.path}' is not protected! See: https://docs.gitlab.com/user/project/repository/branches/protected/", Colors.YELLOW))
+                print(
+                    colorize(
+                        f"WARNING: The default branch for '{project.path}' is not protected! See: https://docs.gitlab.com/user/project/repository/branches/protected/",
+                        Colors.YELLOW,
+                    )
+                )
 
             try:
                 if (

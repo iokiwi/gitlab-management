@@ -63,9 +63,15 @@ def main(args: List[str] | None = None, config: Dict | None = None) -> None:
 
     print(table)
     if args.fix:
-        console.print(f"Changes have been applied to {change_count}/{len(project_ids)} projects", style="green")
+        console.print(
+            f"Changes have been applied to {change_count}/{len(project_ids)} projects",
+            style="green",
+        )
     else:
-        console.print(f"Changes would be applied to {change_count}/{len(project_ids)} projects. Use the --fix flag to apply changes", style="yellow")
+        console.print(
+            f"Changes would be applied to {change_count}/{len(project_ids)} projects. Use the --fix flag to apply changes",
+            style="yellow",
+        )
 
 
 def app() -> None:
