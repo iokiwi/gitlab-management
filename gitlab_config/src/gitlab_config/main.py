@@ -1,74 +1,26 @@
-import argparse
+import sys
 import logging
+from typing import List
 
 import gitlab
 from prettytable import PrettyTable
 from rich.console import Console
 
 from gitlab_config import config
+from gitlab_config.cli import parse_args
 from gitlab_config.groups import get_projects_for_groups
 from gitlab_config.projects import manage_projects
 
-log_level = getattr(logging, config.CONFIG["GITLAB_CONFIG_LOG_LEVEL"], logging.WARNING)
+log_level = config.CONFIG.get("GITLAB_CONFIG_LOG_LEVEL", "WARNING")
+log_level = getattr(logging, log_level)
 logging.basicConfig(
     level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
-def get_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
-    # Groups subcommand
-    groups_parser = subparsers.add_parser(
-        "groups",
-        help="Manage projects level settings across one or more groups and, optionally, their sub-groups",
-    )
-    groups_parser.add_argument(
-        "group_names_or_ids",
-        nargs="+",
-        help="One or more group names or ids for which to manage or report the configuration.",
-    )
-    groups_parser.add_argument(
-        "--limit", type=int, help="Stop after doing <n> projects. Helpful for testing."
-    )
-    groups_parser.add_argument(
-        "-r",
-        "--recursive",
-        default=False,
-        action="store_true",
-        help="Recursively search sub-groups of specified group(s)",
-    )
-    groups_parser.add_argument(
-        "-f",
-        "--fix",
-        action="store_true",
-        help="Script will not make changes unless this flag is passed. E.g. Script is no-op by default.",
-    )
-
-    # Projects subcommand
-    projects_parser = subparsers.add_parser(
-        "projects",
-        help="Manage project level settings for one or more projects by project id",
-    )
-    projects_parser.add_argument(
-        "project_ids",
-        nargs="+",
-        help="Projects id of one or more projects for which to manage or report the configuration.",
-    )
-    projects_parser.add_argument(
-        "-f",
-        "--fix",
-        action="store_true",
-        help="Script will not make changes unless this flag is passed. E.g. Script is no-op by default.",
-    )
-
-    return parser.parse_args()
-
-
-def main() -> None:
-    args = get_args()
+def main(args: List[str] | None = None) -> None:
+    args = parse_args(args)
     console = Console()
 
     if not args.fix:
@@ -76,7 +28,10 @@ def main() -> None:
             "No changes will be made unless the --fix flag is specified", style="yellow"
         )
 
-    gl = gitlab.Gitlab(config.CONFIG["GITLAB_URL"], private_token=config.GITLAB_TOKEN)
+    gl = gitlab.Gitlab(
+        config.CONFIG.get("GITLAB_URL", "https://gitlab.com"),
+        private_token=config.GITLAB_TOKEN,
+    )
 
     if args.command == "projects":
         project_ids = args.project_ids
@@ -104,4 +59,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
