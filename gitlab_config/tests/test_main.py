@@ -2,6 +2,7 @@ import pytest
 
 from gitlab_config.main import main
 
+
 class TestProjectsSubcommand:
     def test_projects_basic_args(self, mocker):
         mock_gitlab = mocker.patch("gitlab_config.main.gitlab.Gitlab")

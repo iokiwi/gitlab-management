@@ -2,6 +2,7 @@ import os
 
 import pytest
 
+
 @pytest.fixture(autouse=True)
 def setup_config_file(monkeypatch):
     """Create a config.yaml file before tests and clean it up after."""

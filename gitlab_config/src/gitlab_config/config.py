@@ -23,7 +23,6 @@ def load_yaml_config(filename: Path = "config.yaml"):
 
 
 def get_config(filename: Path | None = None):
-
     if filename is None:
         filename = os.environ.get("GITLAB_CONFIG_YAML_FILEPATH", "config.yaml")
 

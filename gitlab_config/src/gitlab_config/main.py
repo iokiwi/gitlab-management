@@ -19,6 +19,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 def main(args: List[str], config: Dict | None = None) -> None:
     args = parse_args(args)
     console = Console()
