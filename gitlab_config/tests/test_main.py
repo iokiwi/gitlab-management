@@ -4,10 +4,10 @@ from gitlab_config.main import main
 
 
 class TestProjectsSubcommand:
-    def test_projects_basic_args(self, mocker):
+    def test_projects_basic_args(self, mocker, mock_manage_projects_response):
         mock_gitlab = mocker.patch("gitlab_config.main.gitlab.Gitlab")
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "123", "status": "unchanged"}], 0)
+        mock_manage_projects.return_value = mock_manage_projects_response
 
         args = ["projects", "123", "456"]
         main(args)
@@ -19,7 +19,21 @@ class TestProjectsSubcommand:
     def test_projects_with_fix_flag(self, mocker):
         mock_gitlab = mocker.patch("gitlab_config.main.gitlab.Gitlab")
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "123", "status": "changed"}], 1)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["projects", "123", "--fix"]
         main(args)
@@ -31,7 +45,21 @@ class TestProjectsSubcommand:
     def test_projects_single_id(self, mocker):
         mock_gitlab = mocker.patch("gitlab_config.main.gitlab.Gitlab")
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "999", "status": "unchanged"}], 0)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["projects", "999"]
         main(args)
@@ -44,8 +72,19 @@ class TestProjectsSubcommand:
         mock_gitlab = mocker.patch("gitlab_config.main.gitlab.Gitlab")
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
         mock_manage_projects.return_value = (
-            [{"id": "1", "status": "unchanged"}, {"id": "2", "status": "unchanged"}],
-            0,
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
         )
 
         args = ["projects", "1", "2", "3", "4", "5"]
@@ -67,7 +106,21 @@ class TestGroupsSubcommand:
             mocker.Mock(id=456),
         ]
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "123", "status": "unchanged"}], 0)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["groups", "acme-org"]
         main(args)
@@ -86,7 +139,21 @@ class TestGroupsSubcommand:
         )
         mock_get_projects_for_groups.return_value = [mocker.Mock(id=123)]
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "123", "status": "changed"}], 1)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["groups", "test-group", "--fix"]
         main(args)
@@ -102,7 +169,21 @@ class TestGroupsSubcommand:
         )
         mock_get_projects_for_groups.return_value = [mocker.Mock(id=789)]
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "789", "status": "unchanged"}], 0)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["groups", "parent-group", "--recursive"]
         main(args)
@@ -121,7 +202,21 @@ class TestGroupsSubcommand:
             mocker.Mock(id=200),
         ]
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "100", "status": "unchanged"}], 0)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["groups", "test-group", "--limit", "5"]
         main(args)
@@ -140,7 +235,21 @@ class TestGroupsSubcommand:
             mocker.Mock(id=456),
         ]
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "123", "status": "changed"}], 2)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = [
             "groups",
@@ -171,7 +280,21 @@ class TestGroupsSubcommand:
             mocker.Mock(id=333),
         ]
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "111", "status": "unchanged"}], 0)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["groups", "group1", "group2", "group3"]
         main(args)
@@ -188,7 +311,21 @@ class TestArgumentCombinations:
     def test_projects_short_fix_flag(self, mocker):
         mock_gitlab = mocker.patch("gitlab_config.main.gitlab.Gitlab")
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "123", "status": "changed"}], 1)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["projects", "123", "-f"]
         main(args)
@@ -204,7 +341,21 @@ class TestArgumentCombinations:
         )
         mock_get_projects_for_groups.return_value = [mocker.Mock(id=456)]
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "456", "status": "unchanged"}], 0)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["groups", "test-group", "-r"]
         main(args)
@@ -220,7 +371,21 @@ class TestArgumentCombinations:
         )
         mock_get_projects_for_groups.return_value = [mocker.Mock(id=789)]
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "789", "status": "changed"}], 1)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["groups", "test-group", "-f"]
         main(args)
@@ -236,7 +401,21 @@ class TestArgumentCombinations:
         )
         mock_get_projects_for_groups.return_value = [mocker.Mock(id=999)]
         mock_manage_projects = mocker.patch("gitlab_config.main.manage_projects")
-        mock_manage_projects.return_value = ([{"id": "999", "status": "changed"}], 1)
+        mock_manage_projects.return_value = (
+            [
+                {
+                    "project": {
+                        "value": "acme-website",
+                        "changed": False,
+                    },
+                    "default_branch": {
+                        "value": "main",
+                        "changed": False,
+                    },
+                }
+            ],
+            1,
+        )
 
         args = ["groups", "test-group", "-f", "--recursive", "--limit", "3"]
         main(args)

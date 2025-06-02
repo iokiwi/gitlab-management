@@ -3,6 +3,26 @@ import os
 import pytest
 
 
+@pytest.fixture
+def mock_manage_projects_response():
+    """Standard mock response for manage_projects function."""
+    return (
+        [
+            {
+                "project": {
+                    "value": "acme-website",
+                    "changed": False,
+                },
+                "default_branch": {
+                    "value": "main",
+                    "changed": False,
+                },
+            }
+        ],
+        1,
+    )
+
+
 @pytest.fixture(autouse=True)
 def setup_config_file(monkeypatch):
     """Create a config.yaml file before tests and clean it up after."""
@@ -10,7 +30,6 @@ def setup_config_file(monkeypatch):
     monkeypatch.setenv("GITLAB_CONFIG_YAML_FILEPATH", "test_config.yaml")
 
     config_content = """
-GITLAB_CONFIG_LOG_LEVEL: "WARNING"
 GITLAB_URL: "https://gitlab.com"
 
 default:

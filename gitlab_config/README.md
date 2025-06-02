@@ -1,4 +1,6 @@
 # GitLab Config
+![Ruff](https://github.com/iokiwi/gitlab-management/actions/workflows/ruff.yml/badge.svg)
+![gitlab_config Tests](https://github.com/iokiwi/gitlab-management/actions/workflows/test_gitlab_config.yml/badge.svg)
 
 Script for managing consistent config across all GitLab projects in a Group. Requires [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
@@ -48,7 +50,7 @@ Note the script operates in a no-op mode by default and will not update anything
 
 The `--limit <n>` option stops the script after checking `<n>` projects which is usefull for testing on a limited scale.
 
-<!-- ## Testing
+## Testing
 
 To run all tests:
 ```bash
