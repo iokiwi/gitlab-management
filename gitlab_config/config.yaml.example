@@ -1,4 +1,3 @@
-GITLAB_CONFIG_LOG_LEVEL: "WARNING"
 GITLAB_URL: "https://gitlab.com"
 # GITLAB_TOKEN Needs to go in your environment variable. Never store it in plain text long term.
 
@@ -27,7 +26,7 @@ default:
 
     # UI: Settings > General > Default description template for merge requests
     # Docs: https://docs.gitlab.com/user/project/description_templates/
-    merge_request_template: |
+    merge_requests_template: |
         ### Objective
 
         ### Changes
