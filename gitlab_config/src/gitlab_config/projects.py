@@ -6,20 +6,19 @@ from gitlab.v4.objects.projects import Project
 
 logger = logging.getLogger(__name__)
 
+
 # TODO: For each field, report if it changed or should change
-# Display it as yellow or red if it will change. Display it as blue or geen if it did change.
+# Display it as yellow or red if it will change. Display it as blue or green if it did change.
 # Create styled text without printing
 # styled_text = Text("No changes will be made unless the --fix flag is passed", style="yellow")
 # console.print(styled_text)
 # styled_string = console.render_str(Text("Hello", style="yellow"))
 # print(styled_string)
-
-
 def manage_project_settings(project: Project, config: Dict, fix: bool = False) -> Dict:
     # Fetch the project by ID to get detailed information, including the default branch
 
     changed = False
-    managed_fields = config.CONFIG.get(project.name, config.CONFIG["default"])
+    managed_fields = config.get(project.name, config["default"])
 
     project_changes = []
     push_rule_changes = []

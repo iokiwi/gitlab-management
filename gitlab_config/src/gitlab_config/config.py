@@ -22,5 +22,10 @@ def load_yaml_config(filename: Path = "config.yaml"):
         raise Exception(f"Unexpected error reading config file '{filename}': {str(e)}")
 
 
-CONFIG = load_yaml_config()
-GITLAB_TOKEN = os.environ.get("GITLAB_TOKEN")
+def get_config(filename: Path | None = None):
+    if filename is None:
+        filename = os.environ.get("GITLAB_CONFIG_YAML_FILEPATH", "config.yaml")
+
+    config = load_yaml_config(filename)
+    config["GITLAB_TOKEN"] = os.environ.get("GITLAB_TOKEN")
+    return config

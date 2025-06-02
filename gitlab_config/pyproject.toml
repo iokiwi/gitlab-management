@@ -21,7 +21,7 @@ dev = [
 ]
 
 [project.scripts]
-gitlab-config = "gitlab_config.main:main"
+gitlab-config = "gitlab_config.main:app"
 
 [build-system]
 requires = ["hatchling"]
