@@ -1,7 +1,6 @@
 # GitLab Managamenet
 
 ![Ruff](https://github.com/iokiwi/gitlab-management/actions/workflows/ruff.yml/badge.svg)
-
 ![gitlab_config Tests](https://github.com/iokiwi/gitlab-management/actions/workflows/test_gitlab_config.yml/badge.svg)
 
 A collection of utilities to ease the management of GitLab groups on GitLabs.com

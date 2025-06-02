@@ -4,20 +4,33 @@ from typing import Dict, List
 import gitlab
 from gitlab.v4.objects.projects import Project
 
+from rich.console import Console, Text
+from gitlab_config.colors import Colors, color_cell, colorize
+
+console = Console()
 logger = logging.getLogger(__name__)
 
 
-# TODO: For each field, report if it changed or should change
-# Display it as yellow or red if it will change. Display it as blue or green if it did change.
-# Create styled text without printing
-# styled_text = Text("No changes will be made unless the --fix flag is passed", style="yellow")
-# console.print(styled_text)
-# styled_string = console.render_str(Text("Hello", style="yellow"))
-# print(styled_string)
+# WIP, there must be a way to generalize the management of rpoject fields
+def manage_project_setting(project: Project, setting: str, expected: str, fix: bool) -> Dict:
+
+    # print(getattr(project, setting), expected, fix)
+    changed = False
+    if getattr(project, setting) != expected:
+        changed = True
+        if fix:
+            setattr(project, setting, expected)
+
+    return {
+        "value": color_cell(getattr(project, setting), changed, fix),
+        "changed": changed,
+    }
+
+
 def manage_project_settings(project: Project, config: Dict, fix: bool = False) -> Dict:
     # Fetch the project by ID to get detailed information, including the default branch
 
-    changed = False
+    project_changed = False
     managed_fields = config.get(project.name, config["default"])
 
     project_changes = []
@@ -27,47 +40,67 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
     push_rules = project.pushrules.get()
 
     output_fields = {
-        "project": project.name,
-        "default_branch": project.default_branch,
-        "protected branches": ", ".join([b.name for b in protected_branches]),
+        "project": {
+            "value": project.name,
+        },
+        "default_branch": {
+            "value": project.default_branch,
+        },
+        "protected branches": {
+            "value": ", ".join([b.name for b in protected_branches]),
+        },
     }
 
     for field, expected in managed_fields.items():
+        changed = False
+
         if field == "remove_source_branch_after_merge":
-            if fix:
-                if project.remove_source_branch_after_merge is not expected:
-                    project_changes.append(
-                        f"remove_source_branch_after_merge: {project.remove_source_branch_after_merge} -> {expected}"
-                    )
+            if project.remove_source_branch_after_merge != expected:
+                changed = True
+                project_changes.append(
+                    f"remove_source_branch_after_merge: {project.remove_source_branch_after_merge} -> {expected}"
+                )
+                if fix:
                     project.remove_source_branch_after_merge = expected
-            output_fields[field] = project.remove_source_branch_after_merge
+
+            output_fields[field] = {
+                "value": color_cell(project.remove_source_branch_after_merge, changed, fix),
+                "changed": changed,
+            }
 
         if field == "only_allow_merge_if_pipeline_succeeds":
-            if fix:
-                if project.only_allow_merge_if_pipeline_succeeds is not expected:
-                    project_changes.append(
-                        f"only_allow_merge_if_pipeline_succeeds: {project.only_allow_merge_if_pipeline_succeeds} -> {expected}"
-                    )
+            if project.only_allow_merge_if_pipeline_succeeds is not expected:
+                changed = True
+                project_changes.append(
+                    f"only_allow_merge_if_pipeline_succeeds: {project.only_allow_merge_if_pipeline_succeeds} -> {expected}"
+                )
+                if fix:
                     project.only_allow_merge_if_pipeline_succeeds = expected
-            output_fields[field] = project.only_allow_merge_if_pipeline_succeeds
+            output_fields[field] = {
+                "value": color_cell(project.only_allow_merge_if_pipeline_succeeds, changed, fix),
+                "changed": changed,
+            }
 
         # Set merge method to FF for projects with a singular 'main' branch only.
         # https://docs.gitlab.com/ee/user/project/merge_requests/methods/#fast-forward-merge
         if field == "merge_method":
-            if fix:
-                managed_fields["merge_method"]
-                if project.merge_method != "ff":
-                    # We only do FF if we have a singular 'main' branch
-                    if project.default_branch == "main":
-                        project_changes.append(
-                            f"merge_method: {project.default_branch} -> ff"
-                        )
-                        project.merge_method = "ff"
-            output_fields[field] = project.merge_method
+            if project.merge_method != "ff" and project.default_branch == "main":
+                changed = True
+                project_changes.append(
+                    f"merge_method: {project.default_branch} -> ff"
+                )
+                if fix:
+                    project.merge_method = "ff"
+
+            output_fields[field] = {
+                "value": color_cell(project.merge_method, changed, fix),
+                "changed": changed,
+            }
 
         if field == "merge_access_levels":
             merge_access_levels_default_branch = []
 
+            default_protected_branch = None
             for branch in protected_branches:
                 if branch.name == project.default_branch:
                     default_protected_branch = project.branches.get(branch.name)
@@ -77,16 +110,21 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
                             level["access_level_description"]
                         )
 
-            if fix:
-                try:
-                    if (
-                        len(merge_access_levels_default_branch) != 1
-                        or merge_access_levels_default_branch[0]
-                        != "Developers + Maintainers"
-                    ):
-                        project_changes.append(
-                            f"Merge rule: {project.squash_option} -> default_on"
-                        )
+            if default_protected_branch is None:
+                print(colorize(f"WARNING: The default branch for '{project.path}' is not protected! See: https://docs.gitlab.com/user/project/repository/branches/protected/", Colors.YELLOW))
+
+            try:
+                if (
+                    len(merge_access_levels_default_branch) != 1
+                    or merge_access_levels_default_branch[0]
+                    != "Developers + Maintainers"
+                ):
+                    changed = True
+                    project_changes.append(
+                        f"Merge rule: {project.squash_option} -> default_on"
+                    )
+
+                    if fix:
                         project.protectedbranches.delete(default_protected_branch.name)
                         project.protectedbranches.create(
                             {
@@ -96,70 +134,80 @@ def manage_project_settings(project: Project, config: Dict, fix: bool = False) -
                                 "allow_force_push": False,
                             }
                         )
-                except TypeError as e:
-                    logging.exception(e)
+            except TypeError as e:
+                logging.exception(e)
 
-            output_fields[field] = ",".join(merge_access_levels_default_branch)
+            output_fields[field] = {
+                "value": ",".join(merge_access_levels_default_branch),
+                "changed": changed,
+            }
 
         # Enable squash and merge by default (can be opted out of)
         # https://docs.gitlab.com/ee/user/project/merge_requests/squash_and_merge.html#set-default-squash-options-for-a-merge-request
         if field == "squash_option":
-            if fix:
-                if project.squash_option != expected:
-                    project_changes.append(
-                        f"squash_options: {project.squash_option} -> {expected}"
-                    )
+            if project.squash_option != expected:
+                changed = True
+                project_changes.append(
+                    f"squash_options: {project.squash_option} -> {expected}"
+                )
+                if fix:
                     project.squash_option = expected
 
-            output_fields[field] = project.squash_option
+            output_fields[field] = {
+                "value": color_cell(project.squash_option, changed, fix),
+                "changed": changed,
+            }
 
         if field == "merge_requests_template":
-            # Set merge request template if available
+            if project.merge_requests_template != expected:
+                changed = True
+                project_changes.append(
+                    "merge_requests_template: updated from template file"
+                )
 
-            if fix:
-                # Check if the merge request template is different from the current one
-                if project.merge_requests_template != expected:
-                    project_changes.append(
-                        "merge_requests_template: updated from template file"
-                    )
+                if fix:
                     project.merge_requests_template = expected
 
             # Curate the output so it doesn't break table
             if project.merge_requests_template is None:
-                output_fields[field] = project.merge_requests_template
+                output = project.merge_requests_template
             elif project.merge_requests_template != expected:
-                output_fields[field] = "Unexpected Template"
+                output = "Unexpected Template"
             else:
-                output_fields[field] = "Template matches configuration"
+                output = "Template matches configuration"
+
+            output_fields[field] = {
+                "value": color_cell(output, changed, fix),
+                "changed": changed,
+            }
 
         # Prevent pushing secret files
         # https://docs.gitlab.com/ee/user/project/repository/push_rules.html#prevent-pushing-secrets-to-the-repository
         if field == "prevent_secrets":
-            if fix:
-                if push_rules.prevent_secrets is not expected:
-                    push_rule_changes.append(
-                        f"prevent_secrets: {push_rules.prevent_secrets} -> {expected}"
-                    )
+            if push_rules.prevent_secrets is not expected:
+                changed = True
+                push_rule_changes.append(
+                    f"prevent_secrets: {push_rules.prevent_secrets} -> {expected}"
+                )
+                if fix:
                     push_rules.prevent_secrets = expected
-            output_fields[field] = push_rules.prevent_secrets
 
-    if fix:
+            output_fields[field] = {
+                "value": color_cell(push_rules.prevent_secrets, changed, fix),
+                "changed": changed,
+            }
+
         if push_rule_changes:
-            changed = True
-            push_rules.save()
+            project_changed = True
+            if fix:
+                push_rules.save()
 
         if project_changes:
-            changed = True
-            project.save()
+            project_changed = True
+            if fix:
+                project.save()
 
-        if not project_changes and not push_rule_changes:
-            print(f"No changes for {project.name}")
-        else:
-            print(project.name)
-            for change in push_rule_changes + project_changes:
-                print(f"{change}")
-
-    return (output_fields, changed)
+    return (output_fields, project_changed)
 
 
 def manage_projects(

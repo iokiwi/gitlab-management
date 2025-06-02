@@ -58,11 +58,14 @@ def main(args: List[str] | None = None, config: Dict | None = None) -> None:
     table.field_names = rows[0].keys()
 
     for row in rows:
-        table.add_row(row.values())
+        row_values = [r["value"] for r in row.values()]
+        table.add_row(row_values)
 
-    console.print(f"Changed {change_count}/{len(project_ids)} projects", style="green")
     print(table)
-    console.print(f"Changed {change_count}/{len(project_ids)} projects", style="green")
+    if args.fix:
+        console.print(f"Changes have been applied to {change_count}/{len(project_ids)} projects", style="green")
+    else:
+        console.print(f"Changes would be applied to {change_count}/{len(project_ids)} projects. Use the --fix flag to apply changes", style="yellow")
 
 
 def app() -> None:
