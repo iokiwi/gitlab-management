@@ -1,16 +1,6 @@
 import pytest
 
 from gitlab_config.main import main
-from unittest.mock import patch
-
-
-@pytest.fixture(autouse=True)
-def mock_config():
-    with patch(
-        "gitlab_config.config.load_yaml_config", return_value={"test": "config"}
-    ):
-        yield
-
 
 class TestProjectsSubcommand:
     def test_projects_basic_args(self, mocker):

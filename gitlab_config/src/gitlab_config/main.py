@@ -1,27 +1,30 @@
-import sys
 import logging
-from typing import List
+import os
+import sys
+from typing import Dict, List
 
 import gitlab
 from prettytable import PrettyTable
 from rich.console import Console
 
-from gitlab_config import config
 from gitlab_config.cli import parse_args
+from gitlab_config.config import get_config
 from gitlab_config.groups import get_projects_for_groups
 from gitlab_config.projects import manage_projects
 
-log_level = config.CONFIG.get("GITLAB_CONFIG_LOG_LEVEL", "WARNING")
+log_level = os.environ.get("GITLAB_CONFIG_LOG_LEVEL", "WARNING")
 log_level = getattr(logging, log_level)
 logging.basicConfig(
     level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-
-def main(args: List[str] | None = None) -> None:
+def main(args: List[str], config: Dict | None = None) -> None:
     args = parse_args(args)
     console = Console()
+
+    if config is None:
+        config = get_config()
 
     if not args.fix:
         console.print(
@@ -29,8 +32,8 @@ def main(args: List[str] | None = None) -> None:
         )
 
     gl = gitlab.Gitlab(
-        config.CONFIG.get("GITLAB_URL", "https://gitlab.com"),
-        private_token=config.GITLAB_TOKEN,
+        config["GITLAB_URL"],
+        private_token=config["GITLAB_TOKEN"],
     )
 
     if args.command == "projects":
@@ -59,4 +62,4 @@ def main(args: List[str] | None = None) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main(sys.argv[1:], get_config())
